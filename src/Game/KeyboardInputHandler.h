@@ -5,28 +5,25 @@
 
 #include <windows.h>
 #include <fstream>
-#include <map>
-#include <set>
 #include "InputHandler.h"
+#include "Command.h"
+
 
 
 namespace TileGame {
 
-    class KeyboardInputHandler : InputHandler {
+    class KeyboardInputHandler : public InputHandler {
 
     private:
 
-        std::map<Command, int> vKeys;
-        bool configCorrect = false;
+       const std::map<int, Commands>& keys;
 
     public:
 
-        KeyboardInputHandler();
-        void readKeyConfig(const char* path) override;
-        bool isConfigCorrect() override;
+        KeyboardInputHandler(const std::map<int, Commands>& keys);
 
-        Command input();
-
+        int input() override;
+        const std::map<int, Commands>& getCommands() override;
     };
 
 }

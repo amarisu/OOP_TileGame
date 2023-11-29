@@ -4,11 +4,27 @@
 
 namespace TileGame {
 
+    Game::Game(ConfigLoader& configLoader) : lastUnlockedLevel(NO_LEVEL),
+                                      currentLevel(NO_LEVEL),
+                                      gameLoader(LEVEL_DIR),
+                                      inputHandler(nullptr),
+                                      optionsCorrect( configLoader.isConfigCorrect() )
+    {
+        if( optionsCorrect ){
 
-    Game::Game() : lastUnlockedLevel(NO_LEVEL),
-                   currentLevel(NO_LEVEL),
-                   gameLoader(LEVEL_DIR) {}
+            switch ( configLoader.getInputObject() ) {
+                case KEYBOARD:
+                    inputHandler = new KeyboardInputHandler(configLoader.getKeys());
+                    break;
+            }
+        }
+    }
 
+
+    Game::~Game(){
+
+        delete inputHandler;
+    }
 
     void Game::unlockNextLevel() { if(lastUnlockedLevel < levelsCount) lastUnlockedLevel += 1; }
 
@@ -32,7 +48,7 @@ namespace TileGame {
             std::getline(std::cin, buf);
 
             if (buf == "quit"){
-                currentLevel =  NO_LEVEL; // а вообще подтверждение выхода - и не здесь */
+                currentLevel =  NO_LEVEL;
                 return;
             }
 
@@ -49,25 +65,34 @@ namespace TileGame {
 
     ExitCode Game::gameSession(){
 
+
         selectLevel();
         if(currentLevel == NO_LEVEL) return QUIT;
 
         GameField level(getLevel());
-        Session currentGame(level, BASE_HEALTH);
+        Session currentGame(*inputHandler, level, BASE_HEALTH);
 
         std::cout << "\nStarting the game session...\n";
-        currentGame.run(); // бесконечный цикл внутри!
+        currentGame.run();
 
         resetLevel();
         return currentGame.getExitCode();
     }
 
-    void Game::exec() {
+    bool Game::loadLevels(){
 
         gameLoader.load();
         levelsCount = gameLoader.getLevelCount();
+        return levelsCount != 0;
+    }
 
-        if(levelsCount == 0) {
+
+    void Game::exec() {
+
+        if(!optionsCorrect)
+            return;
+
+        if(!loadLevels()) {
             std::cout << "No levels found. Please restart the game with some correct lvl-files inside the \""
                       << LEVEL_DIR << "\" directory.\n";
             return;
@@ -78,7 +103,6 @@ namespace TileGame {
             ExitCode sessionResult = gameSession();
 
             if (sessionResult == WIN) unlockNextLevel();
-            else if(sessionResult == CONFIG_ERROR) { std::cout <<"There are some configuration issues. Fix it and try again.\n"; break; }
             else if(sessionResult == QUIT) { std::cout <<"Quitting the game.\n"; break; }
         }
 

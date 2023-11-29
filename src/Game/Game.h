@@ -3,10 +3,12 @@
 
 #include "FieldLoader.h"
 #include "Session.h"
+#include "FileConfigLoader.h"
 
 #define NO_LEVEL 0
-#define MAX_LEVEL (10)
+#define MAX_LEVEL 10
 #define LEVEL_DIR "levels"
+
 
 namespace TileGame {
 
@@ -15,10 +17,15 @@ namespace TileGame {
     private:
 
         FieldLoader gameLoader;
+        InputHandler* inputHandler; //
+
         int lastUnlockedLevel;
         unsigned short levelsCount;
         int currentLevel;
 
+        bool optionsCorrect;
+
+        bool loadLevels();
         void selectLevel();
         void unlockNextLevel();
         GameField getLevel();
@@ -29,8 +36,11 @@ namespace TileGame {
         void cancelConsoleEcho();
 
     public:
-        Game();
+
+        Game(ConfigLoader& configLoader);
+        ~Game();
         void exec();
+
 
     };
 }
